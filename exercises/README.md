@@ -1,7 +1,7 @@
 # Ziglings
 
 Welcome to Ziglings! This project contains a series of tiny
-broken programs (and one nasty surprise).  By fixing them, you'll
+broken programs (and one nasty surprise). By fixing them, you'll
 learn how to read and write [Zig](https://ziglang.org/) code.
 
 ![Ziglings](images/ziglings_dark.jpg "Ziglings")
@@ -44,8 +44,8 @@ in that case, you can download it directly from the [build directory](https://zi
 Verify the installation and build number of `zig` like so:
 
 ```
-$ zig version
-0.16.0-dev.xxxx+xxxxxxxxx
+zig version
+0.17.0-dev.xxxx+xxxxxxxxx
 ```
 
 Clone this repository with Git:
@@ -73,11 +73,11 @@ the appropriate tag.
 The Zig language is under very active development. In order to be
 current, Ziglings tracks **development** builds of the Zig
 compiler rather than versioned **release** builds. The last
-stable release was `0.15.2`, but Ziglings needs a dev build with
-pre-release version "0.16.0" and a build number at least as high
+stable release was `0.16`, but Ziglings needs a dev build with
+pre-release version "0.17.0-dev" and a build number at least as high
 as that shown in the example version check above.
 
-**Hint**: You can find a version change summary at the end of this README.
+**Hint**: You can find a summary of breaking changes at the end of this README.
 
 It is likely that you'll download a build which is _greater_ than
 the minimum.
@@ -106,12 +106,6 @@ Or let Ziglings pick an exercise for you:
 zig build -Drandom
 ```
 
-You can also run without checking for correctness:
-
-```
-zig build -Dn=19 test
-```
-
 Or skip the build system entirely and interact directly with the
 compiler if you're into that sort of thing:
 
@@ -119,22 +113,10 @@ compiler if you're into that sort of thing:
 zig run exercises/001_hello.zig
 ```
 
-Calling all wizards: To prepare an executable for debugging,
-install it to zig-cache/bin with:
-
-```
-zig build -Dn=19 install
-```
-
 To get a list of all possible options, run:
 
 ```
-zig build -Dn=19 -l
-
-  install          Install 019_functions2.zig to prefix path
-  uninstall        Uninstall 019_functions2.zig from prefix path
-  test             Run 019_functions2.zig without checking output
-  ...
+zig build -h
 ```
 
 To reset the progress (have it run all the exercises that have already been completed):
@@ -211,6 +193,7 @@ Zig Standard Library
 
 ### Version Changes
 
+* 2026-05-31 zig 0.17.0-dev.607 - zig build: separate the maker process from the configurer process, see[#35428](https://codeberg.org/ziglang/zig/pulls/35428) 
 * 2026-03-20 zig 0.16.0-dev.2915 - `GeneralPurposeAllocator` was changed to `DebugAllocator`
 * 2026-02-04 zig 0.16.0-dev.2471 - added process.Child.Cwd, see [#31090](https://codeberg.org/ziglang/zig/pulls/31090)
 * 2026-01-09 zig 0.16.0-dev.2075 - move randomness API to `std.Io`, see [#30709](https://codeberg.org/ziglang/zig/pulls/30709)

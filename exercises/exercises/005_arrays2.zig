@@ -1,5 +1,5 @@
 //
-// Zig has some fun array operators.
+// Zig has one array operator.
 //
 // You can use '++' to concatenate two arrays:
 //
@@ -7,12 +7,8 @@
 //   const b = [_]u8{ 3,4 };
 //   const c = a ++ b ++ [_]u8{ 5 }; // equals 1 2 3 4 5
 //
-// You can use '**' to repeat an array:
-//
-//   const d = [_]u8{ 1,2,3 } ** 2; // equals 1 2 3 1 2 3
-//
-// Note that both '++' and '**' only operate on arrays while your
-// program is _being compiled_. This special time is known in Zig
+// Note that '++' only operates on arrays while your program is
+// _being compiled_. This special time is known in Zig
 // parlance as "comptime" and we'll learn plenty more about that
 // later.
 //
@@ -25,12 +21,18 @@ pub fn main() void {
     // (Problem 1)
     // Please set this array concatenating the two arrays above.
     // It should result in: 1 3 3 7
-    const leet = le ++ et;
+    const leet = ???;
 
     // (Problem 2)
     // Please set this array using repetition.
     // It should result in: 1 0 0 1 1 0 0 1 1 0 0 1
-    const bit_pattern = [_]u8{ 1, 0, 0, 1 } ** 3;
+    const bit_pattern_unit = ???;
+
+    // How long should the bit pattern be?
+    const len = ???;
+
+    // For now, don't worry about the use of SIMD.
+    const bit_pattern: [len]u8 = std.simd.repeat(len, bit_pattern_unit);
 
     // Okay, that's all of the problems. Let's see the results.
     //
@@ -56,3 +58,12 @@ pub fn main() void {
 
     std.debug.print("\n", .{});
 }
+
+// For the curious:
+//
+// The `std.simd.repeat` function takes a target length and a pattern,
+// and returns a vector filled with that pattern repeated to the
+// desired length.
+//
+// For example, `repeat(5, [_]u8{1, 2})` will return a vector
+// equivalent to `.{1, 2, 1, 2, 1}`.
