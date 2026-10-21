@@ -1,0 +1,1045 @@
+---
+title: "1  Introducing Zig – Introduction to Zig"
+source: "https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html"
+author:
+published:
+created: 2026-10-21
+description:
+tags:
+---
+In this chapter, I want to introduce you to the world of Zig. Zig is a very young language that is being actively developed. As a consequence, its world is still very wild and to be explored. This book is my attempt to help you on your personal journey for understanding and exploring the exciting world of Zig.
+
+I assume you have previous experience with some programming language in this book, not necessarily with a low-level one. So, if you have experience with Python, or Javascript, for example, it will be fine. But, if you do have experience with low-level languages, such as C, C++, or Rust, you will probably learn faster throughout this book.
+
+## 1.1 What is Zig?
+
+Zig is a modern, low-level, and general-purpose programming language. Some programmers think of Zig as a modern and better version of C.
+
+In the author’s personal interpretation, Zig is tightly connected with “less is more”. Instead of trying to become a modern language by adding more and more features, many of the core improvements that Zig brings to the table are actually about removing annoying behaviours/features from C and C++. In other words, Zig tries to be better by simplifying the language, and by having more consistent and robust behaviour. As a result, analyzing, writing and debugging applications become much easier and simpler in Zig, than it is in C or C++.
+
+This philosophy becomes clear with the following phrase from the official website of Zig:
+
+> “Focus on debugging your application rather than debugging your programming language knowledge”.
+
+This phrase is specially true for C++ programmers. Because C++ is a gigantic language, with tons of features, and also, there are lots of different “flavors of C++”. These elements are what makes C++ so complex and hard to learn. Zig tries to go in the opposite direction. Zig is a very simple language, more closely related to other simple languages such as C and Go.
+
+The phrase above is still important for C programmers too. Because, even C being a simple language, it’s still hard sometimes to read and understand C code. For example, pre-processor macros in C are a frequent source of confusion. Sometimes, they really make it hard to debug C programs. Because macros are essentially a second language embedded in C that obscures your C code. With macros, you are no longer 100% sure about which pieces of the code are being sent to the compiler, i.e. they obscure the actual source code that you wrote.
+
+You don’t have macros in Zig. In Zig, the code you write, is the actual code that gets compiled by the compiler. You also don’t have a hidden control flow happening behind the scenes. And, you also don’t have functions or operators from the standard library that make hidden memory allocations behind your back.
+
+By being a simpler language, Zig becomes much more clear and easier to read/write, but at the same time, it also achieves a much more robust state, with more consistent behaviour in edge situations. Once again, less is more.
+
+## 1.2 Hello world in Zig
+
+We begin our journey in Zig by creating a small “Hello World” program. To start a new Zig project in your computer, you simply call the `init` command from the `zig` compiler. Just create a new directory in your computer, then, init a new Zig project inside this directory, like this:
+
+```bash
+mkdir hello_world
+cd hello_world
+zig init
+```
+
+```
+info: created build.zig
+info: created build.zig.zon
+info: created src/main.zig
+info: created src/root.zig
+info: see \`zig build --help\` for a menu of options
+```
+
+### 1.2.1 Understanding the project files
+
+After you run the `init` command from the `zig` compiler, some new files are created inside of your current directory. First, a “source” (`src`) directory is created, containing two files, `main.zig` and `root.zig`. Each `.zig` file is a separate Zig module, which is simply a text file that contains some Zig code.
+
+By convention, the `main.zig` module is where your main function lives. Thus, if you are building an executable program in Zig, you need to declare a `main()` function, which represents the entrypoint of your program, i.e., where the execution of your program begins.
+
+However, if you are building a library (instead of an executable program), then, the normal procedure is to delete this `main.zig` file and start with the `root.zig` module. By convention, the `root.zig` module is the root source file of your library.
+
+```bash
+tree .
+```
+
+```
+.
+├── build.zig
+├── build.zig.zon
+└── src
+    ├── main.zig
+    └── root.zig
+
+1 directory, 4 files
+```
+
+The `init` command also creates two additional files in our working directory: `build.zig` and `build.zig.zon`. The first file (`build.zig`) represents a build script written in Zig. This script is executed when you call the `build` command from the `zig` compiler. In other words, this file contains Zig code that executes the necessary steps to build the entire project.
+
+Low-level languages normally use a compiler to build your source code into binary executables or binary libraries. Nevertheless, this process of compiling your source code and building binary executables or binary libraries from it, became a real challenge in the programming world, once the projects became bigger and bigger. As a result, programmers created “build systems”, which are a second set of tools designed to make this process of compiling and building complex projects, easier.
+
+Examples of build systems are GNU Make, GNU Autoconf and Ninja [^1], which are used to build complex C and C++ projects. With these systems, you can write scripts, which are called “build scripts”. They simply are scripts that describes the necessary steps to compile/build your project.
+
+However, these are separate tools, that do not belong to C/C++ compilers, like `gcc` or `clang`. As a result, in C/C++ projects, you have not only to install and manage your C/C++ compilers, but you also have to install and manage these build systems separately.
+
+In Zig, we don’t need to use a separate set of tools to build our projects, because a build system is embedded inside the language itself. We can use this build system to write small scripts in Zig, which describe the necessary steps to build/compile our Zig project [^2]. So, everything you need to build a complex Zig project is the `zig` compiler, and nothing more.
+
+The second generated file (`build.zig.zon`) is a JSON-like file, in which you can describe your project, and also, declare a set of dependencies of your project that you want to fetch from the internet. In other words, you can use this `build.zig.zon` file to include a list of external libraries in your project.
+
+One possible way to include an external Zig library in your project, is to manually build and install the library in your system, and just link your source code with the library at the build step of your project.
+
+However, if this external Zig library is available on GitHub for example, and it has a valid `build.zig.zon` file in the root folder of the project, which describes the project, you can easily include this library in your project by simply listing this external library in your `build.zig.zon` file.
+
+In other words, this `build.zig.zon` file works similarly to the `package.json` file in Javascript projects, or the `Pipfile` file in Python projects, or the `Cargo.toml` file in Rust projects. You can read more about this specific file in a couple of articles on the internet [^3] [^4], and you can also see the expected schema for this `build.zig.zon` file in a documentation file inside the official repository of Zig [^5].
+
+### 1.2.2 The file root.zig
+
+Let’s take a look into the `root.zig` file. You might have noticed that every line of code with an expression ends with a semicolon (`;`). This follows the syntax of a C-family programming language [^6].
+
+Also, notice the `@import()` call at the first lines. We use this built-in function to import functionality from other Zig modules into our current module. Therefore, this `@import()` function works similarly to the `#include` pre-processor in C or C++, or, to the `import` statement in Python or Javascript code. In this example, we are importing the `std` module, which gives you access to the Zig Standard Library.
+
+In this `root.zig` file, we can also see how assignments (i.e., creating new objects) are made in Zig. You can create a new object in Zig by using the syntax `(const|var) name = value;`. In the example below, one of the constant objects that are created is `std`. In [Section 1.4](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-assignments) we talk more about objects in general.
+
+```zig
+//! By convention, root.zig is the root source file when making a package.
+const std = @import("std");
+const Io = std.Io;
+
+/// This is a documentation comment to explain the \`printAnotherMessage\` function below.
+///
+/// Accepting an \`Io.Writer\` instance is a handy way to write reusable code.
+pub fn printAnotherMessage(writer: *Io.Writer) Io.Writer.Error!void {
+    try writer.print("Run \`zig build test\` to run the tests.\n", .{});
+}
+
+pub fn add(a: i32, b: i32) i32 {
+    return a + b;
+}
+
+test "basic add functionality" {
+    try std.testing.expect(add(3, 7) == 10);
+}
+```
+
+You can also notice in `root.zig` how comments are done in the language. In Zig there are three types of comments that you can write in your code:
+
+- normal comments, which are lines that start with `//` and are completely ignored by the compiler.
+- doc comments, which are lines that start with `///`, and they document the variable/type/whatever immediately follows that comment. These comments are actually used by the compiler to generate documentation for your code.
+- top-level doc comments, which are lines that start with `//!` and are always present at the top (first lines) of the Zig module, and are used by the compiler to generate documentation about the entire module.
+
+Also, functions in Zig are declared using the `fn` keyword. In this `root.zig` module, we are declaring a function called `add()`, which has two arguments named `a` and `b`. The function returns an integer of the type `i32` as result.
+
+Zig is a strongly-typed language. There are some specific situations where you can (if you want to) omit the type of an object in your code, if this type can be inferred by the `zig` compiler (we talk more about that in [Section 2.4](https://pedropark99.github.io/zig-book/Chapters/03-structs.html#sec-type-inference)). But there are other situations where you do need to be explicit. For example, you do have to explicitly specify the type of each function argument, and also, the return type of every function that you create in Zig.
+
+We specify the type of an object or a function argument in Zig by using a colon character (`:`) followed by the type after the name of this object/function argument. With the expressions `a: i32` and `b: i32`, we know that both `a` and `b` arguments have type `i32`, which is a signed 32 bit integer. In this part, the syntax in Zig is identical to the syntax in Rust, which also specifies types by using the colon character.
+
+Lastly, we have the return type of the function at the end of the line, before we open the curly braces to start writing the function’s body. In the example above, this type is also a signed 32 bit integer (`i32`) value.
+
+Notice that we also have an `pub` keyword before the function declaration. This keyword is transforming the `add()` function into a “public function from this module”. Every function in your Zig module is by default private to this Zig module and can only be called from within this module. Unless, you explicitly mark this function as a public function with the `pub` keyword.
+
+If you think about it, this `pub` keyword in Zig does essentially the opposite of what the `static` keyword do in C/C++. By making a function “public” you allow other Zig modules to access and call this function. A calling Zig module imports another module by using the `@import()` built-in function, which makes all public functions from the imported module visible to the calling Zig module. We talk more about this keyword at [Section 2.3.1](https://pedropark99.github.io/zig-book/Chapters/03-structs.html#sec-pub-keyword).
+
+You can also see a `test` block inside `root.zig`. This is a block of unit tests to be executed. You will learn more about these blocks at [Chapter 8](https://pedropark99.github.io/zig-book/Chapters/03-unittests.html).
+
+### 1.2.3 The main.zig file
+
+Now that we have learned a lot about Zig’s syntax from the `root.zig` file, let’s take a look at the `main.zig` file. A lot of the elements we saw in `root.zig` are also present in `main.zig`. But there are some other elements that we haven’t seen yet, so let’s dive in.
+
+First, look at the return type of the `main()` function in this file. We can see a small change. The return type of the function (`void`) is accompanied by an exclamation mark (`!`). This exclamation mark tells us that this `main()` function might return an error.
+
+It’s worth noting that, a `main()` function in Zig is allowed to return nothing (`void`), or an unsigned 8-bit integer (`u8`) value [^7], or an error. In other words, you can write your `main()` function in Zig to return essentially nothing (`void`), or, if you prefer, you can also write a more C-like `main()` function, which returns an integer value that usually serves as a “status code” for the process.
+
+In this example, the return type annotation of `main()` indicates that this function can either return nothing (`void`), or return an error. This exclamation mark in the return type annotation is an interesting and powerful feature of Zig. In summary, if you write a function and something inside the body of this function might return an error, then, you are forced to:
+
+- either add the exclamation mark to the return type of the function and make it clear that this function might return an error.
+- explicitly handle this error inside the function body.
+
+In most programming languages, we normally handle (or deal with) an error through a *try catch* pattern. Zig does have both `try` and `catch` keywords. But they work a little differently than what you’re probably used to in other languages.
+
+If we look at the `main()` function below, you can see that we do have a `try` keyword on the 5th line. But we do not have a `catch` keyword in this code. In Zig, we use the `try` keyword to execute an expression that might return an error, which, in this example, is the `stdout.print()` expression.
+
+In essence, the `try` keyword executes the expression `stdout.print()`. If this expression returns a valid value, then, the `try` keyword does absolutely nothing. It only passes the value forward. It’s like if this `try` keyword was never there. However, if the expression does return an error, then, the `try` keyword will unwrap the error value, then, it returns this error from the function and also prints the current stack trace to `stderr`.
+
+This might sound weird to you if you come from a high-level language. Because in high-level languages, such as Python, if an error occurs somewhere, this error is automatically returned and the execution of your program will automatically stop even if you don’t want to stop the execution. You are obligated to face the error.
+
+```zig
+const std = @import("std");
+const Writer = std.Io.File.Writer;
+
+pub fn main(init: std.process.Init) !void {
+    var stdout_buffer: [1024]u8 = undefined;
+    var stdout_writer = Writer.init(
+        std.Io.File.stdout(),
+        init.io,
+        &stdout_buffer
+    );
+    const stdout = &stdout_writer.interface;
+    try stdout.print("Hello, {s}!\n", .{"world"});
+    try stdout.flush();
+}
+```
+
+Another thing that you might have noticed in this code example, is that the `main()` function is marked with the `pub` keyword. This is needed for every `main()` function that you create in your Zig projects. So, you should always mark this function as a “public function”. Without it, the operating system will be unable to call this function, and, therefore, to start your program.
+
+### 1.2.4 Compiling the entire project
+
+Now that we have seen the file projects, and understood more about them, let’s discuss how you can actually compile your Zig code into actual executable or library files. Let’s begin with how you can compile the entire project at once.
+
+Just as I described in [Section 1.2.1](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-project-files), as our project grows in size and complexity, we usually prefer to organize the compilation and build process of the project into a build script, using some sort of “build system”.
+
+In other words, as our project grows in size and complexity, we usually prefer to not directly write build commands such as `build-exe`, `build-lib` and `build-obj` commands into the terminal. Because they start to become harder and harder to write as the project grows.
+
+In C/C++ projects, programmers normally opt to use CMake, Ninja, `Makefile` or `configure` scripts to organize this process. However, in Zig, we have a native build system in the language itself. So, we can write build scripts in Zig to compile and build Zig projects. Then, all we need to do, is to call the `zig build` command to build our project.
+
+So, when you execute the `zig build` command, the `zig` compiler will search for a Zig module named `build.zig` inside your current directory, which should be your build script, containing the necessary code to compile and build your project. If the compiler does find this `build.zig` file in your directory, then, the compiler will essentially execute a `zig run` command over this `build.zig` file, to compile and execute this build script, which in turn, will compile and build your entire project.
+
+```bash
+zig build
+```
+
+After you execute this “build project” command, a `zig-out` directory is created in the root of your project directory, where you can find the binary executables and libraries created from your Zig modules accordingly to the build commands that you specified at `build.zig`. We will talk more about the build system in Zig later in this book.
+
+In the example below, I’m executing the binary executable named `hello_world` that was generated by the compiler after the `zig build` command.
+
+```bash
+./zig-out/bin/hello_world
+```
+
+```
+Hello, world!
+```
+
+### 1.2.5 Compiling your code into an executable file
+
+You can compile your Zig code into a binary executable by running the `build-exe` command from the `zig` compiler. You simply list all the Zig modules that you want to build after the `build-exe` command, separated by spaces. In the example below, we are compiling a hypothetical module named `foo.zig`.
+
+```bash
+zig build-exe src/foo.zig
+```
+
+Since we are building an executable, the `zig` compiler will look for a `main()` function declared in any of the files that you list after the `build-exe` command. If the compiler does not find a `main()` function declared somewhere, a compilation error will be raised, warning about this mistake.
+
+The `zig` compiler also offers a `build-lib` and `build-obj` commands, which work the exact same way as the `build-exe` command. The only difference is that, they compile your Zig modules into a portable C ABI library, or, into object files, respectively.
+
+In the case of the `build-exe` command, a binary executable file is created by the `zig` compiler in the root directory of your project. If we take a look now at the contents of our current directory, with a simple `ls` command, we can see the binary file called `foo` that was created by the compiler.
+
+```bash
+ls
+```
+
+```
+build.zig  build.zig.zon  foo  src
+```
+
+If I execute this binary executable, I get the “Hello World” message in the terminal, as we expected.
+
+```bash
+./foo
+```
+
+```
+Hello, world!
+```
+
+### 1.2.6 Compile and execute at the same time
+
+In the previous section, I presented the `zig build-exe` command, which compiles Zig modules into an executable file. However, this means that, in order to execute the executable file, we have to run two different commands. First, the `zig build-exe` command, and then, we call the executable file created by the compiler.
+
+But what if we wanted to perform these two steps, all at once, in a single command? We can do that by using the `zig run` command.
+
+```bash
+zig run src/foo.zig
+```
+
+```
+Hello, world!
+```
+
+## 1.3 How to learn Zig?
+
+What are the best strategies to learn Zig? First of all, of course this book will help you a lot on your journey through Zig. But you will also need some extra resources if you want to be really good at Zig.
+
+As a first tip, you can join a community with Zig programmers to get some help, when you need it:
+
+- Ziggit community: [https://ziggit.dev/](https://ziggit.dev/);
+- Discord, Slack, Telegram, and others: [https://ziglang.org/community/](https://ziglang.org/community/);
+
+Now, one of the best ways to learn Zig is to simply read Zig code. Try to read Zig code often, and things will become more clear. A C/C++ programmer would also probably give you this same tip. Because this strategy really works!
+
+Now, where can you find Zig code to read? I personally think that, the best way of reading Zig code is to read the source code of the Zig Standard Library. The Zig Standard Library is available at the [`lib/std` folder](https://codeberg.org/ziglang/zig/src/branch/master/lib/std) [^8] on the official GitHub repository of Zig. Access this folder, and start exploring the Zig modules.
+
+Also, a great alternative is to read code from other large Zig codebases, such as:
+
+1. the [game engine Mach](https://github.com/hexops/mach) [^9].
+2. a [LLama 2 LLM model implementation in Zig](https://github.com/cgbur/llama2.zig/tree/main) [^10].
+3. the [financial transactions database `tigerbeetle`](https://github.com/tigerbeetle/tigerbeetle) [^11].
+4. the [command-line arguments parser `zig-clap`](https://github.com/Hejsil/zig-clap) [^12].
+5. the [UI framework `capy`](https://github.com/capy-ui/capy) [^13].
+6. the [Language Protocol implementation for Zig, `zls`](https://github.com/zigtools/zls) [^14].
+7. the [event-loop library `libxev`](https://github.com/mitchellh/libxev) [^15].
+
+All these assets are available on GitHub, and this is great, because we can use the GitHub search bar to our advantage, to find Zig code that fits our description. For example, you can always include `lang:Zig` in the GitHub search bar when you are searching for a particular pattern. This will limit the search to only Zig modules.
+
+Also, a great alternative is to consult online resources and documentation. Here is a quick list of resources that I personally use from time to time to learn more about the language each day:
+
+- Zig Language Reference: [https://ziglang.org/documentation/master/](https://ziglang.org/documentation/master/);
+- Zig Standard Library Reference: [https://ziglang.org/documentation/master/std/](https://ziglang.org/documentation/master/std/);
+- Zig Guide: [https://zig.guide/](https://zig.guide/);
+- Karl Seguin Blog: [https://www.openmymind.net/](https://www.openmymind.net/);
+- Zig News: [https://zig.news/](https://zig.news/);
+- Read the code written by one of the Zig core team members: [https://github.com/kubkon](https://github.com/kubkon);
+- Some livecoding sessions are transmitted in the Zig Showtime Youtube Channel: [https://www.youtube.com/@ZigSHOWTIME/videos](https://www.youtube.com/@ZigSHOWTIME/videos);
+
+Another great strategy to learn Zig, or honestly, to learn any language you want, is to practice it by solving exercises. For example, there is a famous repository in the Zig community called [Ziglings](https://ziglings.org/) [^16], which contains more than 100 small exercises that you can solve. It’s a repository of tiny programs written in Zig that are currently broken, and your responsibility is to fix these programs, and make them work again.
+
+A famous tech YouTuber known as *The Primeagen* also posted some videos (on YouTube) where he solves these exercises from Ziglings. The first video is named [“Trying Zig Part 1”](https://www.youtube.com/watch?v=OPuztQfM3Fg&t=2524s&ab_channel=TheVimeagen) [^17].
+
+Another great alternative, is to solve the [Advent of Code exercises](https://adventofcode.com/) [^18]. There are people that already took the time to learn and solve the exercises, and they posted their solutions on GitHub as well, so, in case you need some resource to compare while solving the exercises, you can look at these two repositories:
+
+- [https://github.com/SpexGuy/Zig-AoC-Template](https://github.com/SpexGuy/Zig-AoC-Template);
+- [https://github.com/fjebaker/advent-of-code-2022](https://github.com/fjebaker/advent-of-code-2022);
+
+## 1.4 Creating new objects in Zig (i.e., identifiers)
+
+Let’s talk more about objects in Zig. Readers that have past experience with other programming languages might know this concept through a different name, such as: “variable” or “identifier”. In this book, I choose to use the term “object” to refer to this concept.
+
+To create a new object (or a new “identifier”) in Zig, we use the keywords `const` or `var`. These keywords specify if the object that you are creating is mutable or not. If you use `const`, then the object you are creating is a constant (or immutable) object, which means that once you declare this object, you can no longer change the value stored inside this object.
+
+On the other side, if you use `var`, then, you are creating a variable (or mutable) object. You can change the value of this object as many times you want. Using the keyword `var` in Zig is similar to using the keywords `let mut` in Rust.
+
+### 1.4.1 Constant objects vs variable objects
+
+In the code example below, we are creating a new constant object called `age`. This object stores a number representing the age of someone. However, this code example does not compile successfully. Because on the next line of code, we are trying to change the value of the object `age` to 25.
+
+The `zig` compiler detects that we are trying to change the value of an object/identifier that is constant, and because of that, the compiler will raise a compilation error, warning us about the mistake.
+
+```zig
+const age = 24;
+// The line below is not valid!
+age = 25;
+```
+
+```
+t.zig:10:5: error: cannot assign to constant
+    age = 25;
+      ~~^~~
+```
+
+So, if you want to change the value of your object, you need to transform your immutable (or “constant”) object into a mutable (or “variable”) object. You can do that by using the `var` keyword. This keyword stands for “variable”, and when you apply this keyword to some object, you are telling the Zig compiler that the value associated with this object might change at some point.
+
+Thus, if we come back to the previous example, and change the declaration of the `age` object to use the `var` keyword, then, the program gets compiled successfully. Because now, the `zig` compiler detects that we are changing the value of an object that allows this behaviour, because it’s a “variable object”.
+
+However, if you take a look at the example below, you will notice that we have not only declared the `age` object with the `var` keyword, but we also have explicitly annotated the data type of the `age` object with the `u8` type this time. The basic idea is, when we use a variable/mutable object, the Zig compiler ask for us to be more explicit with what we want, to be more clear about what our code does. This translates into being more explicit about the data types that we want to use in our objects.
+
+Therefore, if you transform your object into a variable/mutable object, just remember to always annotate the type of the object explicitly in your code. Otherwise, the Zig compiler might raise a compilation error, asking you to transform your object back into a `const` object, or, to give your object an “explicit type”.
+
+```zig
+var age: u8 = 24;
+age = 25;
+```
+
+### 1.4.2 Declaring without an initial value
+
+By default, when you declare a new object in Zig, you must give it an initial value. In other words, this means that we have to declare, and, at the same time, initialize every object we create in our source code.
+
+On the other hand, you can, in fact, declare a new object in your source code, and not give it an explicit value. But we need to use a special keyword for that, which is the `undefined` keyword.
+
+It’s important to emphasize that, you should avoid using `undefined` as much as possible. Because when you use this keyword, you leave your object uninitialized, and, as a consequence, if for some reason, your code uses this object while it’s uninitialized, then, you will definitely have undefined behaviour and major bugs in your program.
+
+In the example below, I’m declaring the `age` object again. But this time, I do not give it an initial value. The variable is only initialized at the second line of code, where I store the number 25 in this object.
+
+```zig
+var age: u8 = undefined;
+age = 25;
+```
+
+Having these points in mind, just remember that you should avoid as much as possible to use `undefined` in your code. Always declare and initialize your objects. Because this gives you much more safety in your program. But in case you really need to declare an object without initializing it… the `undefined` keyword is the way to do it in Zig.
+
+### 1.4.3 There is no such thing as unused objects
+
+Every object (being constant or variable) that you declare in Zig **must be used in some way**. You can give this object to a function call, as a function argument, or, you can use it in another expression to calculate the value of another object, or, you can call a method that belongs to this particular object.
+
+It doesn’t matter in which way you use it. As long as you use it. If you try to break this rule, i.e., if your try to declare a object, but not use it, the `zig` compiler will not compile your Zig source code, and it will issue a error message warning that you have unused objects in your code.
+
+Let’s demonstrate this with an example. In the source code below, we declare a constant object called `age`. If you try to compile a simple Zig program with this line of code below, the compiler will return an error as demonstrated below:
+
+```zig
+const age = 15;
+```
+
+```
+t.zig:4:11: error: unused local constant
+    const age = 15;
+          ^~~
+```
+
+Everytime you declare a new object in Zig, you have two choices:
+
+1. you either use the value of this object;
+2. or you explicitly discard the value of the object;
+
+To explicitly discard the value of any object (constant or variable), all you need to do is to assign this object to a special character in Zig, which is the underscore (`_`). When you assign an object to a underscore, like in the example below, the `zig` compiler will automatically discard the value of this particular object.
+
+You can see in the example below that, this time, the compiler did not complain about any “unused constant”, and successfully compiled our source code.
+
+```zig
+// It compiles!
+const age = 15;
+_ = age;
+```
+
+Now, remember, everytime you assign a particular object to the underscore, this object is essentially destroyed. It’s discarded by the compiler. This means that you can no longer use this object further in your code. It doesn’t exist anymore.
+
+So if you try to use the constant `age` in the example below, after we discarded it, you will get a loud error message from the compiler (talking about a “pointless discard”) warning you about this mistake.
+
+```zig
+// It does not compile.
+const age = 15;
+_ = age;
+// Using a discarded value!
+std.debug.print("{d}\n", .{age + 2});
+```
+
+```
+t.zig:7:5: error: pointless discard
+    of local constant
+```
+
+This same rule applies to variable objects. Every variable object must also be used in some way. And if you assign a variable object to the underscore, this object also gets discarded, and you can no longer use this object.
+
+### 1.4.4 You must mutate every variable objects
+
+Every variable object that you create in your source code must be mutated at some point. In other words, if you declare an object as a variable object, with the keyword `var`, and you do not change the value of this object at some point in the future, the `zig` compiler will detect this, and it will raise an error warning you about this mistake.
+
+The concept behind this is that every object you create in Zig should be preferably a constant object, unless you really need an object whose value will change during the execution of your program.
+
+So, if I try to declare a variable object such as `where_i_live` below, and I do not change the value of this object in some way, the `zig` compiler raises an error message with the phrase “variable is never mutated”.
+
+```zig
+var where_i_live = "Belo Horizonte";
+_ = where_i_live;
+```
+
+```
+t.zig:7:5: error: local variable is never mutated
+t.zig:7:5: note: consider using 'const'
+```
+
+## 1.5 Primitive Data Types
+
+Zig has many different primitive data types available for you to use. You can see the full list of available data types at the official [Language Reference page](https://ziglang.org/documentation/master/#Primitive-Types) [^19].
+
+But here is a quick list:
+
+- Unsigned integers: `u8`, 8-bit integer; `u16`, 16-bit integer; `u32`, 32-bit integer; `u64`, 64-bit integer; `u128`, 128-bit integer.
+- Signed integers: `i8`, 8-bit integer; `i16`, 16-bit integer; `i32`, 32-bit integer; `i64`, 64-bit integer; `i128`, 128-bit integer.
+- Float number: `f16`, 16-bit floating point; `f32`, 32-bit floating point; `f64`, 64-bit floating point; `f128`, 128-bit floating point;
+- Boolean: `bool`, represents true or false values.
+- C ABI compatible types: `c_long`, `c_char`, `c_short`, `c_ushort`, `c_int`, `c_uint`, and many others.
+- Pointer sized integers: `isize` and `usize`.
+
+## 1.6 Arrays
+
+You create arrays in Zig by using a syntax that resembles the C syntax. First, you specify the size of the array (i.e., the number of elements that will be stored in the array) you want to create inside a pair of brackets.
+
+Then, you specify the data type of the elements that will be stored inside this array. All elements present in an array in Zig must have the same data type. For example, you cannot mix elements of type `f32` with elements of type `i32` in the same array.
+
+After that, you simply list the values that you want to store in this array inside a pair of curly braces. In the example below, I am creating two constant objects that contain different arrays. The first object contains an array of 4 integer values, while the second object, an array of 3 floating point values.
+
+Now, you should notice that in the object `ls`, I am not explicitly specifying the size of the array inside of the brackets. Instead of using a literal value (like the value 4 that I used in the `ns` object), I am using the special character underscore (`_`). This syntax tells the `zig` compiler to fill this field with the number of elements listed inside of the curly braces. So, this syntax `[_]` is for lazy (or smart) programmers who leave the job of counting how many elements there are in the curly braces for the compiler.
+
+```zig
+const ns = [4]u8{48, 24, 12, 6};
+const ls = [_]f64{432.1, 87.2, 900.05};
+_ = ns; _ = ls;
+```
+
+It’s worth noting that these are static arrays, meaning that they cannot grow in size. Once you declare your array, you cannot change the size of it. This is very common in low level languages. Because low level languages normally wants to give you (the programmer) full control over memory, and the way in which arrays are expanded is tightly related to memory management.
+
+### 1.6.1 Selecting elements of the array
+
+One very common activity is to select specific portions of an array you have in your source code. In Zig, you can select a specific element from your array, by simply providing the index of this particular element inside brackets after the object name. In the example below, I am selecting the third element from the `ns` array. Notice that Zig is a “zero-index” based language, like C, C++, Rust, Python, and many other languages.
+
+Also notice in the example below that I am using the `stdout.print()` function to print the value of this element to the terminal. We have seen this function before in the `main.zig` file at [Section 1.2.3](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-main-file). You will see this `stdout` object being mentioned constantly across this book. This object gives us access to the OS stdout channel, through which you can print/show output to the user of your program. We will talk more about it at [Chapter 13](https://pedropark99.github.io/zig-book/Chapters/12-file-op.html).
+
+For brevity reasons, I will constantly omit the definition of this `stdout` object in the code examples, just to not repeat myself and occupy unnecessary space in this book. For now, just remember that you can always go back to the [Section 1.2.3](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-main-file) section to see the complete definition of this `stdout` object.
+
+```zig
+const ns = [4]u8{48, 24, 12, 6};
+try stdout.print("{d}\n", .{ ns[2] });
+try stdout.flush();
+```
+
+```
+12
+```
+
+In contrast, you can also select specific slices (or sections) of your array, by using a range selector. Some programmers also call these selectors of “slice selectors”, and they also exist in Rust, and have the exact same syntax as in Zig. Anyway, a range selector is a special expression in Zig that defines a range of indexes, and it has the syntax `start..end`.
+
+In the example below, at the second line of code, the `sl` object stores a slice (or a portion) of the `ns` array. More precisely, the elements at index 1 and 2 in the `ns` array.
+
+```zig
+const ns = [4]u8{48, 24, 12, 6};
+const sl = ns[1..3];
+_ = sl;
+```
+
+When you use the `start..end` syntax, the “end tail” of the range selector is non-inclusive, meaning that, the index at the end is not included in the range that is selected from the array. Therefore, the syntax `start..end` actually means `start..end - 1` in practice.
+
+You can for example, create a slice that goes from the first to the last elements of the array, by using `ar[0..ar.len]` syntax In other words, it’s a slice that accesses all elements in the array.
+
+```zig
+const ar = [4]u8{48, 24, 12, 6};
+const sl = ar[0..ar.len];
+_ = sl;
+```
+
+You can also use the syntax `start..` in your range selector. Which tells the `zig` compiler to select the portion of the array that begins at the `start` index until the last element of the array. In the example below, we are selecting the range from index 1 until the end of the array.
+
+```zig
+const ns = [4]u8{48, 24, 12, 6};
+const sl = ns[1..];
+_ = sl;
+```
+
+### 1.6.2 More on slices
+
+As we discussed before, in Zig, you can select specific portions of an existing array. This is called *slicing* in Zig ([Sobeston 2024](https://pedropark99.github.io/zig-book/Chapters/references.html#ref-zigguide)), because when you select a portion of an array, you are creating a slice object from that array.
+
+A slice object is essentially a pointer object accompanied by a length number. The pointer object points to the first element in the slice, and the length number tells the `zig` compiler how many elements there are in this slice.
+
+> Slices can be thought of as a pair of `[*]T` (the pointer to the data) and a `usize` (the element count) ([Sobeston 2024](https://pedropark99.github.io/zig-book/Chapters/references.html#ref-zigguide)).
+
+Through the pointer contained inside the slice you can access the elements (or values) that are inside this range (or portion) that you selected from the original array. But the length number (which you can access through the `len` property of your slice object) is the really big improvement (over C arrays for example) that Zig brings to the table here.
+
+Because with this length number the `zig` compiler can easily check if you are trying to access an index that is out of the bounds of this particular slice, or, if you are causing any buffer overflow problems. In the example below, we access the `len` property of the slice `sl`, which tells us that this slice has 2 elements in it.
+
+```zig
+const ns = [4]u8{48, 24, 12, 6};
+const sl = ns[1..3];
+try stdout.print("{d}\n", .{sl.len});
+try stdout.flush();
+```
+
+```
+2
+```
+
+### 1.6.3 Array concatenation
+
+There is one array operator available in Zig that is very useful, which is the array concatenation operator (`++`).
+
+One important detail about this operator is that it works only when both operands have a size (or “length”) that is compile-time known. We are going to talk more about the differences between “compile-time known” and “runtime known” in [Section 3.1.1](https://pedropark99.github.io/zig-book/Chapters/01-memory.html#sec-compile-time). But for now, keep in mind that you cannot use this operator in every situation.
+
+In summary, the `++` operator creates a new array that is the concatenation of both arrays provided as operands. So, the expression `a ++ b` produces a new array which contains all elements from array `a` followed by all elements from array `b`.
+
+```zig
+const a = [_]u8{1,2,3};
+const b = [_]u8{4,5};
+const c = a ++ b;
+try stdout.print("{any}\n", .{c});
+try stdout.flush();
+```
+
+```
+{ 1, 2, 3, 4, 5 }
+```
+
+This `++` operator is particularly useful to concatenate strings together. Strings in Zig are described in depth in [Section 1.8](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-zig-strings). In summary, a string object in Zig is essentially an array of bytes. So, you can use this array concatenation operator to effectively concatenate strings together.
+
+### 1.6.4 Runtime versus compile-time known length in slices
+
+We are going to talk a lot about the differences between compile-time known and runtime known across this book, especially in [Section 3.1.1](https://pedropark99.github.io/zig-book/Chapters/01-memory.html#sec-compile-time). But the basic idea is that a thing is compile-time known, when we know everything (the value, the attributes and the characteristics) about this thing at compile-time. In contrast, a runtime known thing is when the exact value of a thing is calculated only at runtime. Therefore, we don’t know the value of this thing at compile-time, only at runtime.
+
+We have learned in [Section 1.6.1](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-select-array-elem) that slices are created by using a *range selector*, which represents a range of indexes. When this “range of indexes” (i.e., both the start and the end of this range) is known at compile-time, the slice object that gets created is actually, under the hood, just a single-item pointer to an array.
+
+You don’t need to precisely understand what that means now. We are going to talk a lot about pointers in [Chapter 6](https://pedropark99.github.io/zig-book/Chapters/05-pointers.html). For now, just understand that, when the range of indexes is known at compile-time, the slice that gets created is just a pointer to an array, accompanied by a length value that tells the size of the slice.
+
+If you have a slice object like this, i.e., a slice that has a compile-time known range, you can use common pointer operations over this slice object. For example, you can dereference the pointer of this slice, by using the `.*` method, like you would do on a normal pointer object.
+
+```zig
+const arr1 = [10]u64 {
+    1, 2, 3, 4, 5,
+    6, 7, 8, 9, 10
+};
+// This slice has a compile-time known range.
+// Because we know both the start and end of the range.
+const slice = arr1[1..4];
+_ = slice;
+```
+
+On the other hand, if the range of indexes is not known at compile time, then, the slice object that gets created is not a pointer anymore, and, thus, it does not support pointer operations. For example, maybe the start index is known at compile time, but the end index is not. In such case, the range of the slice becomes runtime known only.
+
+Reading a file is a type of operation that usually leads to lengths that are known only at runtime. Because you usually don’t know the size of the file upfront. Maybe today the file is 4.5KB in size. But, maybe tomorrow, you add some more lines to the file and it’s size grows to 4.8KB. Since the file is something external (it is independent) to your source code, you can easily change it without affecting your code. As consequence, knowing the size of the file at compile time can be trick, or impossible.
+
+Since we have `comptime` in Zig, there probably are some techniques that can be used to calculate the size of a file at compile-time. But I think you got my point anyway, right? Regardless of these techniques, programmers don’t usually write their program just to calculate the size of a file at compile-time.
+
+If a programmer wants to read a file, he/she/they usually write a program that either:
+
+1. reads a fixed amount of bytes from the file (which is the code example exposed below).
+2. first, calculates the size of the file (usually this is done with position indicators), then, tries to allocate a buffer that can hold the amount of data in the file, then, reads the entire file into this allocated buffer.
+3. reads the file as a continuous stream of bytes.
+
+In either of these three cases, your program still cannot predict the exact size of the file during compile-time. Even on the first case, in which we specify a fixed amount of bytes that we want to read from the file.
+
+The code snippet exposed below is an example of the first case. In this snippet, we always try to read the first 1024 bytes of the file. Because we have specified this fixed amount of bytes (1024 bytes) in the source code, we do know the length of the `file_buffer` object (it’s 1024) at compile time. But, we don’t know the length of the data that we actually got from the file.
+
+In other words, we don’t know the value stored in the `nbytes` object, which represents how many bytes of data we actually read from the file. The value of this object is known only at runtime, and, therefore, we don’t know (at compile-time) the size of the slice that get’s printed to the screen in the `std.debug.print()` call.
+
+```zig
+const std = @import("std");
+
+fn read_file(path: []const u8, buffer: []u8, io: std.Io) !usize {
+    const file = try std.Io.Dir.cwd().openFile(
+        io, path, .{}
+    );
+    defer file.close(io);
+
+    const nbytes = try file.readPositionalAll(
+        io, buffer[0..], 0
+    );
+    return nbytes;
+}
+
+pub fn main(init: std.process.Init) !void {
+    var gpa = std.heap.DebugAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var file_buffer = try allocator.alloc(u8, 1024);
+    defer allocator.free(file_buffer);
+    @memset(file_buffer[0..], 0);
+
+    const path = "../ZigExamples/file-io/shop-list.txt";
+    const nbytes = try read_file(
+        path, file_buffer[0..], init.io
+    );
+
+    std.debug.print("{s}", .{file_buffer[0..nbytes]});
+}
+```
+
+```
+title,author,priceO Hobbit,J. R. R. Tolkien,40.7Ma
+  atemática para Economistas,Carl P. Simon and Lawren
+  nce Blume,140Microeconomia: uma Abordagem Moderna,H
+  Hal R. Varian,141A Luneta Âmbar,Philip Pullman,42.9
+```
+
+## 1.7 Blocks and scopes
+
+Blocks are created in Zig by a pair of curly braces. A block is just a group of expressions (or statements) contained inside of a pair of curly braces. All of these expressions that are contained inside of this pair of curly braces belongs to the same scope.
+
+In other words, a block just delimits a scope in your code. The objects that you define inside the same block belongs to the same scope, and, therefore, are accessible from within this scope. At the same time, these objects are not accessible outside of this scope. So, you could also say that blocks are used to limit the scope of the objects that you create in your source code. In less technical terms, blocks are used to specify where in your source code you can access whatever object you have in your source code.
+
+So, a block is just a group of expressions contained inside a pair of curly braces. And every block have its own scope separated from the others. The body of a function is a classic example of a block. If statements, for and while loops (and any other structure in the language that uses the pair of curly braces) are also examples of blocks.
+
+This means that, every if statement, or for loop, etc., that you create in your source code has its own separate scope. That is why you can’t access the objects that you defined inside of your for loop (or if statement) in an outer scope, i.e., a scope outside of the for loop. Because you are trying to access an object that belongs to a scope that is different than your current scope.
+
+You can create blocks within blocks, with multiple levels of nesting. You can also (if you want to) give a label to a particular block, with the colon character (`:`). Just write `label:` before you open the pair of curly braces that delimits your block. When you label a block in Zig, you can use the `break` keyword to return a value from this block, like as if it was a function’s body. You just write the `break` keyword, followed by the block label in the format `:label`, and the expression that defines the value that you want to return.
+
+Like in the example below, where we are returning the value from the `y` object from the block `add_one`, and saving the result inside the `x` object.
+
+```zig
+var y: i32 = 123;
+const x = add_one: {
+    y += 1;
+    break :add_one y;
+};
+if (x == 124 and y == 124) {
+    try stdout.print("Hey!", .{});
+    try stdout.flush();
+}
+```
+
+```
+Hey!
+```
+
+## 1.8 How strings work in Zig?
+
+The first project that we are going to build and discuss in this book is a base64 encoder/decoder ([Chapter 4](https://pedropark99.github.io/zig-book/Chapters/01-base64.html)). But in order for us to build such a thing, we need to get a better understanding on how strings work in Zig. So let’s discuss this specific aspect of Zig.
+
+Strings in Zig work very similarly to strings in C, but they come with some extra caveats which adds more safety and efficiency to them. You could also say that Zig simply uses a more modern and safe approach to manage and use strings.
+
+A string in Zig is essentially an array of arbitrary bytes, or, more specifically, an array of `u8` values. This very similar to a string in C, which is also interpreted as an array of arbitrary bytes, or, in the case of C, an array of `char` (which usually represents an unsigned 8-bit integer value in most systems) values.
+
+Now, because a string in Zig is an array, you automatically get the length of the string (i.e. the length of the array) embedded in the value itself. This makes all the difference! Because now, the Zig compiler can use the length value that is embedded in the string to check for “buffer overflow” or “wrong memory access” problems in your code.
+
+To achieve this same kind of safety in C, you have to do a lot of work that kind of seems pointless. So getting this kind of safety is not automatic and much harder to do in C. For example, if you want to track the length of your string throughout your program in C, then, you first need to loop through the array of bytes that represents this string, and find the null element (`'\0'`) position to discover where exactly the array ends, or, in other words, to find how much elements the array of bytes contain.
+
+To do that, you would need to do something like this in C. In this example, the C string stored in the object `array` is 25 bytes long:
+
+```c
+#include <stdio.h>
+int main() {
+    char* array = "An example of string in C";
+    int index = 0;
+    while (1) {
+        if (array[index] == '\0') {
+            break;
+        }
+        index++;
+    }
+    printf("Number of elements in the array: %d\n", index);
+}
+```
+
+```
+Number of elements in the array: 25
+```
+
+You don’t have this kind of work in Zig. Because the length of the string is always present and accessible in the string value itself. You can easily access the length of the string through the `len` attribute. As an example, the `string_object` object below is 43 bytes long:
+
+```zig
+const string_object = "This is an example of string literal in Zig";
+try stdout.print("{d}\n", .{string_object.len});
+try stdout.flush();
+```
+
+```
+43
+```
+
+Another point is that Zig always assumes that the sequence of bytes in your string is UTF-8 encoded. This might not be true for every sequence of bytes you’re working with, but it’s not really Zig’s job to fix the encoding of your strings (you can use [`iconv`](https://www.gnu.org/software/libiconv/) [^20] for that). Today, most of the text in our modern world, especially on the web, should be UTF-8 encoded. So if your string literal is not UTF-8 encoded, then, you will likely have problems in Zig.
+
+Let’s take for example the word “Hello”. In UTF-8, this sequence of characters (H, e, l, l, o) is represented by the sequence of decimal numbers 72, 101, 108, 108, 111. In hexadecimal, this sequence is `0x48`, `0x65`, `0x6C`, `0x6C`, `0x6F`. So if I take this sequence of hexadecimal values, and ask Zig to print this sequence of bytes as a sequence of characters (i.e., a string), then, the text “Hello” will be printed into the terminal:
+
+```zig
+const bytes = [_]u8{0x48, 0x65, 0x6C, 0x6C, 0x6F};
+try stdout.print("{s}\n", .{bytes});
+try stdout.flush();
+```
+
+```
+Hello
+```
+
+### 1.8.1 Using a slice versus a sentinel-terminated array
+
+In memory, all string values in Zig are always stored in the same way. They are simply stored as sequences/arrays of arbitrary bytes in memory. However, there are two different ways that this sequence/array of bytes is normally used and accessed inside Zig code, which are:
+
+- a sentinel-terminated array of `u8` values.
+- or as a slice of `u8` values.
+
+Most of the times, you will normally access and use strings as slices of `u8` values. Specially because most of the functions from the Zig Standard Library receive strings as input as slices of `u8` values.
+
+#### 1.8.1.1 Sentinel-terminated arrays
+
+Sentinel-terminated arrays in Zig are described in the Language Reference of Zig [^21]. In summary a sentinel-terminated array is just a normal array, but, the key difference here is that they contain a “sentinel value” at the last index/element of the array. With a sentinel-terminated array you embed both the length of the array, and also, the sentinel value in the type itself of your object.
+
+For example, if you write a string literal value in your code, and ask Zig to print the data type of this value, you usually get a data type in the format `*const [n:0]u8`. The `n` in the data type indicates the size of the string (that is the length of the array). The zero after the `n:` part of the data type is the sentinel value itself.
+
+```zig
+// Printing the type of a string literal value:
+try stdout.print("{any}\n", .{@TypeOf("A literal value")});
+try stdout.flush();
+```
+
+```
+*const [15:0]u8
+```
+
+So, with this data type `*const [n:0]u8` you are essentially saying that you have an array of `u8` values of length `n`, where, the element at the index corresponding to the length `n` in the array is the number zero. If you really think about this description, you will notice that this is just a fancy way to describe a string in C, which is a null-terminated array of bytes. The `NULL` value in C is the number zero. So, an array that ends in a null/zero value in C is essentially a sentinel-terminated array in Zig, where the sentinel value of the array is the number zero.
+
+Therefore, a sentinel-terminated array in Zig is just a type that embeds both the length and also the sentinel-value of the array inside the object type itself. So, in the case of a string literal value in Zig, it is just a pointer to a null-terminated array of bytes (i.e., similar to a C string). But in Zig, a string literal value also embeds the length of the string, and also, the fact that they are “NULL terminated”, into the data type of the value itself.
+
+#### 1.8.1.2 Slice
+
+You can also access and use the arbitrary sequence of bytes that represent your string as a slice of `u8` values. The majority of functions from the Zig standard library usually receive strings as inputs as slices of `u8` values (slices were presented in [Section 1.6](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-arrays)).
+
+Thus, you will see a lot of string values with a data type of `[]u8` or `[]const u8`, depending if the object where this string is stored is marked as constant with `const`, or as variable with `var`. Now, because the string in this case is being interpreted as a slice, this slice is not necessarilly null-terminated, because now, the sentinel value is not mandatory. You can include the null/zero value in the slice if you want to, but there is no need to do it.
+
+```zig
+// This is a string value being
+// interpreted as a slice.
+const str: []const u8 = "A string value";
+try stdout.print("{any}\n", .{@TypeOf(str)});
+try stdout.flush();
+```
+
+```
+[]const u8
+```
+
+### 1.8.2 Iterating through the string
+
+If you want to see the actual bytes that represents a string in Zig, you can use a `for` loop to iterate through each byte in the string, and ask Zig to print each byte as a hexadecimal value to the terminal. You do that by using a `print()` statement with the `X` formatting specifier, like you would normally do with the [`printf()` function](https://cplusplus.com/reference/cstdio/printf/) [^22] in C.
+
+```zig
+const string_object = "This is an example";
+try stdout.print("Bytes that represents the string object: ", .{});
+for (string_object) |byte| {
+    try stdout.print("{X} ", .{byte});
+}
+try stdout.print("\n", .{});
+try stdout.flush();
+```
+
+```
+Bytes that represents the string object: 54 68 69 
+   73 20 69 73 20 61 6E 20 65 78 61 6D 70 6C 65
+```
+
+### 1.8.3 A better look at the object type
+
+Now, we can inspect better the type of objects that Zig create. To check the type of any object in Zig, you can use the `@TypeOf()` function. If we look at the type of the `simple_array` object below, you will find that this object is an array of 4 elements. Each element is a signed integer of 32 bits which corresponds to the data type `i32` in Zig. That is what an object of type `[4]i32` is.
+
+But if we look closely at the type of the string literal value exposed below, you will find that this object is a constant pointer (hence the `*const` annotation) to an array of 16 elements (or 16 bytes). Each element is a single byte (more precisely, an unsigned 8 bit integer - `u8`), that is why we have the `[16:0]u8` portion of the type below, and also, you can see that this is a null-terminated array, because of the zero value after the `:` character in the data type. In other words, the string literal value exposed below is 16 bytes long.
+
+Now, if we create a pointer to the `simple_array` object, then, we get a constant pointer to an array of 4 elements (`*const [4]i32`), which is very similar to the type of the string literal value. This demonstrates that a string literal value in Zig is already a pointer to a null-terminated array of bytes.
+
+Furthermore, if we take a look at the type of the `string_obj` object, you will see that it’s a slice object (hence the `[]` portion of the type) to a sequence of constant `u8` values (hence the `const u8` portion of the type).
+
+```zig
+const std = @import("std");
+pub fn main() !void {
+    const simple_array = [_]i32{1, 2, 3, 4};
+    const string_obj: []const u8 = "A string object";
+    std.debug.print(
+        "Type 1: {}\n", .{@TypeOf(simple_array)}
+    );
+    std.debug.print(
+        "Type 2: {}\n", .{@TypeOf("A string literal")}
+    );
+    std.debug.print(
+        "Type 3: {}\n", .{@TypeOf(&simple_array)}
+    );
+    std.debug.print(
+        "Type 4: {}\n", .{@TypeOf(string_obj)}
+    );
+}
+```
+
+```
+Type 1: [4]i32
+Type 2: *const [16:0]u8
+Type 3: *const [4]i32
+Type 4: []const u8
+```
+
+### 1.8.4 Byte vs unicode points
+
+It’s important to point out that each byte in the array is not necessarily a single character. This fact arises from the difference between a single byte and a single unicode point.
+
+The encoding UTF-8 works by assigning a number (which is called a unicode point) to each character in the string. For example, the character “H” is stored in UTF-8 as the decimal number 72. This means that the number 72 is the unicode point for the character “H”. Each possible character that can appear in a UTF-8 encoded string have its own unicode point.
+
+For example, the Latin Capital Letter A With Stroke (Ⱥ) is represented by the number (or the unicode point) 570. However, this decimal number (570) is higher than the maximum number stored inside a single byte, which is 255. In other words, the maximum decimal number that can be represented with a single byte is 255. That is why, the unicode point 570 is actually stored inside the computer’s memory as the bytes `C8 BA`.
+
+```zig
+const string_object = "Ⱥ";
+_ = try stdout.write(
+    "Bytes that represents the string object: "
+);
+for (string_object) |char| {
+    try stdout.print("{X} ", .{char});
+}
+try stdout.flush();
+```
+
+```
+Bytes that represents the string object: C8 BA
+```
+
+This means that to store the character Ⱥ in a UTF-8 encoded string, we need to use two bytes together to represent the number 570. That is why the relationship between bytes and unicode points is not always 1 to 1. Each unicode point is a single character in the string, but not always a single byte corresponds to a single unicode point.
+
+All of this means that if you loop through the elements of a string in Zig, you will be looping through the bytes that represents that string, and not through the characters of that string. In the Ⱥ example above, the for loop needed two iterations (instead of a single iteration) to print the two bytes that represents this Ⱥ letter.
+
+Now, all english letters (or ASCII letters if you prefer) can be represented by a single byte in UTF-8. As a consequence, if your UTF-8 string contains only english letters (or ASCII letters), then, you are lucky. Because the number of bytes will be equal to the number of characters in that string. In other words, in this specific situation, the relationship between bytes and unicode points is 1 to 1.
+
+But on the other side, if your string contains other types of letters… for example, you might be working with text data that contains, chinese, japanese or latin letters, then, the number of bytes necessary to represent your UTF-8 string will likely be much higher than the number of characters in that string.
+
+If you need to iterate through the characters of a string, instead of its bytes, then, you can use the `std.unicode.Utf8View` struct to create an iterator that iterates through the unicode points of your string.
+
+In the example below, we loop through the japanese characters “アメリカ”. Each of the four characters in this string is represented by three bytes. But the for loop iterates four times, one iteration for each character/unicode point in this string:
+
+```zig
+var utf8 = try std.unicode.Utf8View.init("アメリカ");
+var iterator = utf8.iterator();
+while (iterator.nextCodepointSlice()) |codepoint| {
+    try stdout.print(
+        "got codepoint {x}\n",
+        .{codepoint},
+    );
+}
+
+try stdout.flush();
+```
+
+```
+got codepoint e382a2
+got codepoint e383a1
+got codepoint e383aa
+got codepoint e382ab
+```
+
+### 1.8.5 Some useful functions for strings
+
+In this section, I just want to quickly describe some functions from the Zig Standard Library that are very useful to use when working with strings. Most notably:
+
+- `std.mem.eql()`: to compare if two strings are equal.
+- `std.mem.splitScalar()`: to split a string into an array of substrings given a delimiter value.
+- `std.mem.splitSequence()`: to split a string into an array of substrings given a substring delimiter.
+- `std.mem.startsWith()`: to check if string starts with substring.
+- `std.mem.endsWith()`: to check if string ends with substring.
+- `std.mem.trim()`: to remove specific values from both start and end of the string.
+- `std.mem.concat()`: to concatenate strings together.
+- `std.mem.count()`: to count the occurrences of substring in the string.
+- `std.mem.replace()`: to replace the occurrences of substring in the string.
+
+Notice that all of these functions come from the `mem` module of the Zig Standard Library. This module contains multiple functions and methods that are useful to work with memory and sequences of bytes in general.
+
+The `eql()` function is used to check if two slices of data are equal or not. Since strings are just arbitrary arrays of bytes, we can use this function to compare two strings together. This function returns a boolean value indicating if the two strings are equal or not. The first argument of this function is the data type of the elements of the slices that are being compared.
+
+```zig
+const name: []const u8 = "Pedro";
+try stdout.print(
+    "{any}\n", .{std.mem.eql(u8, name, "Pedro")}
+);
+try stdout.flush();
+```
+
+```
+true
+```
+
+The `splitScalar()` and `splitSequence()` functions are useful to split a string into multiple fragments, like the `split()` method from Python strings. The difference between these two methods is that the `splitScalar()` uses a single character as the separator to split the string, while `splitSequence()` uses a sequence of characters (a.k.a. a substring) as the separator. There is a practical example of these functions later in the book.
+
+The `startsWith()` and `endsWith()` functions are pretty straightforward. They return a boolean value indicating if the string (or, more precisely, if the slice of data) begins (`startsWith`) or ends (`endsWith`) with the sequence provided.
+
+```zig
+const name: []const u8 = "Pedro";
+try stdout.print(
+    "{any}\n", .{std.mem.startsWith(u8, name, "Pe")}
+);
+try stdout.flush();
+```
+
+```
+true
+```
+
+The `concat()` function, as the name suggests, concatenate two or more strings together. Because the process of concatenating the strings involves allocating enough space to accomodate all the strings together, this `concat()` function receives an allocator object as input.
+
+```zig
+const str1 = "Hello";
+const str2 = " you!";
+const str3 = try std.mem.concat(
+    allocator, u8, &[_][]const u8{ str1, str2 }
+);
+try stdout.print("{s}\n", .{str3});
+try stdout.flush();
+```
+
+As you can imagine, the `replace()` function is used to replace substrings in a string by another substring. This function works very similarly to the `replace()` method from Python strings. Therefore, you provide a substring to search, and every time that the `replace()` function finds this substring within the input string, it replaces this substring with the “replacement substring” that you provided as input.
+
+In the example below, we are taking the input string “Hello”, and replacing all occurrences of the substring “el” inside this input string with “34”, and saving the results inside the `buffer` object. As result, the `replace()` function returns an `usize` value that indicates how many replacements were performed.
+
+```zig
+const str1 = "Hello";
+var buffer: [5]u8 = undefined;
+const nrep = std.mem.replace(
+    u8, str1, "el", "34", buffer[0..]
+);
+try stdout.print("New string: {s}\n", .{buffer});
+try stdout.print("N of replacements: {d}\n", .{nrep});
+try stdout.flush();
+```
+
+```
+New string: H34lo
+N of replacements: 1
+```
+
+## 1.9 Safety in Zig
+
+A general trend in modern low-level programming languages is safety. As our modern world becomes more interconnected with technology and computers, the data produced by all of this technology becomes one of the most important (and also, one of the most dangerous) assets that we have.
+
+This is probably the main reason why modern low-level programming languages have been giving great attention to safety, especially memory safety, because memory corruption is still the main target for hackers to exploit. The reality is that we don’t have an easy solution for this problem. For now, we only have techniques and strategies that mitigates these problems.
+
+As Richard Feldman explains on his [most recent GOTO conference talk](https://www.youtube.com/watch?v=jIZpKpLCOiU&ab_channel=GOTOConferences) [^23], we haven’t figured it out yet a way to achieve **true safety in technology**. In other words, we haven’t found a way to build software that won’t be exploited with 100% certainty. We can greatly reduce the risks of our software being exploited, by ensuring memory safety for example. But this is not enough to achieve “true safety” territory.
+
+Because even if you write your program in a “safe language”, hackers can still exploit failures in the operating system where your program is running (e.g. maybe the system where your code is running has a “backdoor exploit” that can still affect your code in unexpected ways), or also, they can exploit the features from the architecture of your computer. A recently found exploit that involves memory invalidation through a feature of “memory tags” present in ARM chips is an example of that ([Kim et al. 2024](https://pedropark99.github.io/zig-book/Chapters/references.html#ref-exploit1)).
+
+The question is: what have Zig and other languages been doing to mitigate this problem? If we take Rust as an example, Rust is, for the most part [^24], a memory safe language by enforcing specific rules to the developer. In other words, the key feature of Rust, the *borrow checker*, forces you to follow a specific logic when you are writing your Rust code, and the Rust compiler will always complain everytime you try to go out of this pattern.
+
+In contrast, the Zig language is not a memory safe language by default. There are some memory safety features that you get for free in Zig, especially in arrays, slices and pointer objects. But there are other tools offered by the language, that are not used by default. In other words, the `zig` compiler does not obligate you to use such tools.
+
+The tools listed below are related to memory safety. That is, they help you to achieve memory safety in your Zig code:
+
+- `defer` allows you to keep free operations physically close to allocations. This helps you to avoid memory leaks, “use after free”, and also “double-free” problems. Furthermore, it also keeps free operations logically tied to the end of the current scope, which greatly reduces the mental overhead about object lifetime.
+- `errdefer` helps you to guarantee that your program frees the allocated memory, even if a runtime error occurs.
+- pointers and objects are non-nullable by default. This helps you to avoid memory problems that might arise from de-referencing null pointers.
+- Zig offers some native types of allocators (called “testing allocators”) that can detect memory leaks and double-frees. These types of allocators are widely used on unit tests, so they transform your unit tests into a weapon that you can use to detect memory problems in your code.
+- arrays and slices in Zig have their lengths embedded in the object itself, which makes the `zig` compiler very effective on detecting “index out-of-range” type of errors, and avoiding buffer overflows.
+
+Despite these features that Zig offers that are related to memory safety issues, the language also has some rules that help you to achieve another type of safety, which is more related to program logic safety. These rules are:
+
+- pointers and objects are non-nullable by default. Which eliminates an edge case that might break the logic of your program.
+- switch statements must exaust all possible options.
+- the `zig` compiler forces you to handle every possible error in your program.
+
+## 1.10 Other parts of Zig
+
+We already learned a lot about Zig’s syntax, and also, some pretty technical details about it. Just as a quick recap:
+
+- We talked about how functions are written in Zig in [Section 1.2.2](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-root-file) and [Section 1.2.3](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-main-file).
+- How to create new objects/identifiers in [Section 1.2.2](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-root-file) and especially in [Section 1.4](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-assignments).
+- How strings work in Zig in [Section 1.8](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-zig-strings).
+- How to use arrays and slices in [Section 1.6](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-arrays).
+- How to import functionality from other Zig modules in [Section 1.2.2](https://pedropark99.github.io/zig-book/Chapters/01-zig-weird.html#sec-root-file).
+
+But, for now, this amount of knowledge is enough for us to continue with this book. Later, over the next chapters we will still talk more about other parts of Zig’s syntax that are also equally important. Such as:
+
+- How Object-Oriented programming can be done in Zig through *struct declarations* in [Section 2.3](https://pedropark99.github.io/zig-book/Chapters/03-structs.html#sec-structs-and-oop).
+- Basic control flow syntax in [Section 2.1](https://pedropark99.github.io/zig-book/Chapters/03-structs.html#sec-zig-control-flow).
+- Enums in [Section 7.6](https://pedropark99.github.io/zig-book/Chapters/04-http-server.html#sec-enum);
+- Pointers and Optionals in [Chapter 6](https://pedropark99.github.io/zig-book/Chapters/05-pointers.html);
+- Error handling with `try` and `catch` in [Chapter 10](https://pedropark99.github.io/zig-book/Chapters/09-error-handling.html);
+- Unit tests in [Chapter 8](https://pedropark99.github.io/zig-book/Chapters/03-unittests.html);
+- Vectors in [Chapter 17](https://pedropark99.github.io/zig-book/Chapters/15-vectors.html);
+- Build System in [Chapter 9](https://pedropark99.github.io/zig-book/Chapters/07-build-system.html);
+
+[^1]: C++ programmers also like to use CMake to build their projects, but CMake is not exactly a build system (and that is the only reason why it’s not mentioned here in this list). Technically, CMake is a build system generator. It generates build scripts for other build systems, such as Ninja or Make.
+
+[^2]: [https://ziglang.org/learn/overview/#zig-build-system](https://ziglang.org/learn/overview/#zig-build-system)
+
+[^3]: [https://zig.news/edyu/zig-package-manager-wtf-is-zon-558e](https://zig.news/edyu/zig-package-manager-wtf-is-zon-558e)
+
+[^4]: [https://medium.com/@edlyuu/zig-package-manager-2-wtf-is-build-zig-zon-and-build-zig-0-11-0-update-5bc46e830fc1](https://medium.com/@edlyuu/zig-package-manager-2-wtf-is-build-zig-zon-and-build-zig-0-11-0-update-5bc46e830fc1)
+
+[^5]: [https://codeberg.org/ziglang/zig/src/branch/master/doc/build.zig.zon.md](https://codeberg.org/ziglang/zig/src/branch/master/doc/build.zig.zon.md)
+
+[^6]: [https://en.wikipedia.org/wiki/List\_of\_C-family\_programming\_languages](https://en.wikipedia.org/wiki/List_of_C-family_programming_languages)
+
+[^7]: You can see an example of a `main()` function that returns a `u8` value in the `return-integer.zig` file, [https://github.com/pedropark99/zig-book/blob/main/ZigExamples/zig-basics/return-integer.zig](https://github.com/pedropark99/zig-book/blob/main/ZigExamples/zig-basics/return-integer.zig)
+
+[^8]: [https://codeberg.org/ziglang/zig/src/branch/master/lib/std](https://codeberg.org/ziglang/zig/src/branch/master/lib/std)
+
+[^9]: [https://github.com/hexops/mach](https://github.com/hexops/mach)
+
+[^10]: [https://github.com/cgbur/llama2.zig/tree/main](https://github.com/cgbur/llama2.zig/tree/main)
+
+[^11]: [https://github.com/tigerbeetle/tigerbeetle](https://github.com/tigerbeetle/tigerbeetle)
+
+[^12]: [https://github.com/Hejsil/zig-clap](https://github.com/Hejsil/zig-clap)
+
+[^13]: [https://github.com/capy-ui/capy](https://github.com/capy-ui/capy)
+
+[^14]: [https://github.com/zigtools/zls](https://github.com/zigtools/zls)
+
+[^15]: [https://github.com/mitchellh/libxev](https://github.com/mitchellh/libxev)
+
+[^16]: [https://ziglings.org](https://ziglings.org/)
+
+[^17]: [https://www.youtube.com/watch?v=OPuztQfM3Fg&t=2524s&ab\_channel=TheVimeagen](https://www.youtube.com/watch?v=OPuztQfM3Fg&t=2524s&ab_channel=TheVimeagen)
+
+[^18]: [https://adventofcode.com/](https://adventofcode.com/)
+
+[^19]: [https://ziglang.org/documentation/master/#Primitive-Types](https://ziglang.org/documentation/master/#Primitive-Types)
+
+[^20]: [https://www.gnu.org/software/libiconv/](https://www.gnu.org/software/libiconv/)
+
+[^21]: [https://ziglang.org/documentation/master/#Sentinel-Terminated-Arrays](https://ziglang.org/documentation/master/#Sentinel-Terminated-Arrays)
+
+[^22]: [https://cplusplus.com/reference/cstdio/printf/](https://cplusplus.com/reference/cstdio/printf/)
+
+[^23]: [https://www.youtube.com/watch?v=jIZpKpLCOiU&ab\_channel=GOTOConferences](https://www.youtube.com/watch?v=jIZpKpLCOiU&ab_channel=GOTOConferences)
+
+[^24]: Actually, a lot of existing Rust code is still memory unsafe, because they communicate with external libraries through FFI (*foreign function interface*), which disables the borrow-checker features through the `unsafe` keyword.
